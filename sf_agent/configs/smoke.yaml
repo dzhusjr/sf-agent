@@ -1,0 +1,17 @@
+# 1-minute end-to-end test of the whole pipeline with the toy game. No ROM needed.
+#   python train.py -c configs/smoke.yaml --set algo=aux_recurrent_ppo
+base: base.yaml
+run_name: smoke
+algo: aux_recurrent_ppo
+env:
+  backend: dummy
+train:
+  n_envs: 4
+  total_timesteps: 16384
+  n_steps: 128
+  batch_size: 256
+  checkpoint_every: 8192
+  device: cpu
+eval:
+  every: 8192
+  rounds: 6

@@ -1,0 +1,6 @@
+# Baseline: memory-less PPO, short-term context from 4 stacked observations.
+base: base.yaml
+run_name: ppo_mlp
+algo: ppo
+env:
+  frame_stack: 4

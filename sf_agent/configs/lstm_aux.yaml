@@ -1,0 +1,5 @@
+# Main method: LSTM + auxiliary threat-prediction head (PPG-style aux phase).
+# Sweep aux.coef in {0, 0.1, 0.5, 1.0}:  --set aux.coef=0.5 run_name=lstm_aux_c0.5
+base: base.yaml
+run_name: lstm_aux
+algo: aux_recurrent_ppo

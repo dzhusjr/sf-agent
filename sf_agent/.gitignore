@@ -1,0 +1,11 @@
+runs/
+logs/*.out
+__pycache__/
+*.pyc
+.venv/
+probe_frames/
+states/
+figures/
+diambra_engine_info.txt
+diambra_run.log
+*.sif

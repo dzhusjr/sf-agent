@@ -1,0 +1,4 @@
+# RecurrentPPO with an LSTM policy (sb3-contrib).
+base: base.yaml
+run_name: lstm
+algo: recurrent_ppo

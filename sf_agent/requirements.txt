@@ -1,0 +1,17 @@
+# Tested together (Python 3.11, Linux) on 2026-10-21. Same file for the VSC and the laptops.
+# torch is NOT listed: on the VSC it comes from the PyTorch-bundle module,
+# on a laptop install it first:  pip install torch
+stable-baselines3==2.9.0
+sb3-contrib==2.9.0
+gymnasium>=1.0,<1.5          # stable-retro needs >=1.0 (diambra 2.2.7 is patched for it in sf/envs/diambra_backend.py)
+numpy>=1.26
+stable-retro==1.0.1          # SF2 backend (wheels: Linux py3.11-3.13, macOS arm64 py3.11/3.12)
+diambra-arena==2.2.7         # SF3 backend
+protobuf>=3.20,<4            # required by diambra-engine
+tensorboard>=2.14,<2.21      # newer tensorboard wants protobuf>=6, which breaks diambra
+opencv-python>=4.8
+pyyaml
+pandas
+matplotlib
+pytest
+# laptop only (Docker launcher for DIAMBRA engines):  pip install diambra

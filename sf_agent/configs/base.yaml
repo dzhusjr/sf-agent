@@ -1,0 +1,57 @@
+# Shared defaults. Every experiment config sets `base: base.yaml` and overrides a few keys.
+run_name: base
+seed: 0
+out_dir: runs            # runs/<run_name>/seed<seed>/{model.zip, checkpoints, tb, progress.csv}
+
+env:
+  backend: retro         # retro (SF2, no account) | diambra (SF3, needs account+engine) | diambra_mock | dummy
+  difficulty: 3          # diambra/dummy; for retro difficulty comes from the save state
+  use_frame: false       # true -> add 84x84 grayscale frame (+CNN). Ablation: RAM-only vs RAM+frame
+  frame_stack: 1         # >1 stacks observations (gives the MLP baseline short-term memory)
+  action_history: 8      # one-hot of the agent's last N actions added to the observation
+  win_bonus: 1.0         # +/- reward for winning/losing a round, on top of damage dealt - taken
+  retro:
+    state_path: null     # null = stock state (Ryu vs Guile, level 1); or a .state made with tools/make_state.py
+    frame_skip: 4
+    use_macros: true     # add hadouken / shoryuken / tatsumaki macro actions
+    episode: match       # round | match (best of 3)
+  diambra:
+    characters: Ryu
+    step_ratio: 6
+    role: null           # null = random side each episode (P1/P2)
+
+algo: ppo                # ppo | recurrent_ppo | aux_recurrent_ppo
+
+train:
+  n_envs: 16
+  total_timesteps: 5000000
+  n_steps: 256           # per env per rollout; must be divisible by aux.seq_len
+  batch_size: 1024
+  n_epochs: 4
+  learning_rate: 2.5e-4
+  gamma: 0.94
+  gae_lambda: 0.95
+  clip_range: 0.15
+  ent_coef: 0.01
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  net_arch: [256, 256]
+  lstm_hidden: 256
+  normalize_reward: true
+  device: auto           # cpu is usually faster for small MLP/LSTM policies
+  checkpoint_every: 250000
+  resume: null           # path to a checkpoint .zip to continue training
+
+aux:                     # only used by aux_recurrent_ppo
+  k: 8                   # label: "will I be hit within the next k agent steps?"
+  coef: 1.0              # 0 = plain RecurrentPPO through the same code path (control)
+  epochs: 2
+  seq_len: 32
+  batch_seqs: 64
+  lr: 3.0e-4
+  clone_coef: 1.0
+
+eval:
+  every: 100000          # env steps between evaluations
+  rounds: 20             # rounds played per evaluation
+  deterministic: false   # argmax policies can be degenerate (e.g. spam one move); sample like in training

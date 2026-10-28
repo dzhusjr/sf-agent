@@ -1,0 +1,8 @@
+# Ablation: LSTM with the small grayscale frame added (needs more compute; GPU helps here).
+base: base.yaml
+run_name: lstm_frame
+algo: recurrent_ppo
+env:
+  use_frame: true
+train:
+  device: cuda
