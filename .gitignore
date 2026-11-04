@@ -6,6 +6,8 @@ __pycache__/
 *.bin
 *.md
 !README.md
+!HANDOFF.md
+!CLAUDE.md
 roms/
 runs/
 checkpoints/

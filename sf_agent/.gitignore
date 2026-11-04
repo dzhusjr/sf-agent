@@ -4,8 +4,12 @@ __pycache__/
 *.pyc
 .venv/
 probe_frames/
-states/
 figures/
 diambra_engine_info.txt
 diambra_run.log
 *.sif
+roms/
+*.zip
+*.smd
+*.gen
+*.bin
