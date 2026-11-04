@@ -4,7 +4,7 @@ Used for the generalisation experiment: train on the stock state, test on new on
   python tools/make_state.py states/vs_ken.state
 
 Keys (window must be focused):  arrows/WASD = d-pad, u i o = punches (X Y Z), j k l = kicks (A B C),
-enter = START, m = MODE, p = save state to the given path, q = quit.
+e or enter = START, m = MODE, p = save state to the given path, q = quit.
 Each key press holds the button for 6 frames (cv2 has no key-up events).
 Tip: go to OPTIONS to change difficulty, pick characters, and save right when the round starts.
 """
@@ -29,7 +29,8 @@ env.reset()
 KEYMAP = {ord("w"): "UP", ord("s"): "DOWN", ord("a"): "LEFT", ord("d"): "RIGHT",
           82: "UP", 84: "DOWN", 81: "LEFT", 83: "RIGHT",
           ord("u"): "X", ord("i"): "Y", ord("o"): "Z", ord("j"): "A", ord("k"): "B", ord("l"): "C",
-          13: "START", ord("m"): "MODE"}
+          0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT",   # macOS arrow codes
+          13: "START", 10: "START", ord("e"): "START", ord("m"): "MODE"}
 held, hold = None, 0
 img = env.render()
 while True:
@@ -48,4 +49,7 @@ while True:
         print("saved", out)
     elif k in KEYMAP:
         held, hold = KEYMAP[k], 6
+        print("pressed", KEYMAP[k])
+    elif k != 255:
+        print(f"unmapped key code {k}")
 env.close()

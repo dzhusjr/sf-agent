@@ -11,7 +11,7 @@ env:
   action_history: 8      # one-hot of the agent's last N actions added to the observation
   win_bonus: 1.0         # +/- reward for winning/losing a round, on top of damage dealt - taken
   retro:
-    state_path: null     # null = stock state (Ryu vs Guile, level 1); or a .state made with tools/make_state.py
+    state_path: states/medium_guile.state
     frame_skip: 4
     use_macros: true     # add hadouken / shoryuken / tatsumaki macro actions
     episode: match       # round | match (best of 3)
