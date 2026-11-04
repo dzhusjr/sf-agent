@@ -59,12 +59,16 @@ class SF2RetroEnv(gym.Env):
     def __init__(self, state_path: str | None = None, frame_skip: int = 4,
                  use_frame: bool = False, use_macros: bool = True,
                  episode: str = "match", max_round_steps: int = 1500,
+                 intro_frames: int = 120,
                  win_bonus: float = 1.0, render_mode: str | None = None):
         import stable_retro  # imported lazily so other backends work without it
 
         self.frame_skip = frame_skip
         self.use_frame = use_frame
         self.episode = episode                 # "round" or "match" (best of 3)
+        # "ROUND 1 ... FIGHT!" intro of the stock state: inputs are ignored for ~115 frames
+        # (measured with tools/probe_ram.py), so skip it instead of wasting agent steps.
+        self.intro_frames = intro_frames
         self.max_round_steps = max_round_steps
         self.win_bonus = win_bonus
         self.render_mode = render_mode
@@ -154,7 +158,8 @@ class SF2RetroEnv(gym.Env):
         img, self.info = self.env.reset(seed=seed)
         self.info = dict(self.info) if self.info else {}
         noop = np.zeros(len(self.buttons), np.int8)
-        img, _, _, _, self.info = self.env.step(noop)   # populate RAM variables
+        for _ in range(max(1, self.intro_frames)):        # also populates RAM variables
+            img, _, _, _, self.info = self.env.step(noop)
         self.t = 0
         self.rounds = {"won": 0, "lost": 0}
         self._last_img = img

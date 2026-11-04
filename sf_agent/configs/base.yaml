@@ -15,6 +15,7 @@ env:
     frame_skip: 4
     use_macros: true     # add hadouken / shoryuken / tatsumaki macro actions
     episode: match       # round | match (best of 3)
+    intro_frames: 120    # skip the 'ROUND 1 / FIGHT' intro (no control for ~115 frames, measured)
   diambra:
     characters: Ryu
     step_ratio: 6

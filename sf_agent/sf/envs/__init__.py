@@ -28,7 +28,8 @@ def _make_base(env_cfg: dict, rank: int, render_mode: str | None) -> gym.Env:
         r = env_cfg.get("retro", {})
         return SF2RetroEnv(state_path=r.get("state_path"), frame_skip=r.get("frame_skip", 4),
                            use_frame=use_frame, use_macros=r.get("use_macros", True),
-                           episode=r.get("episode", "match"), win_bonus=env_cfg.get("win_bonus", 1.0),
+                           episode=r.get("episode", "match"), intro_frames=r.get("intro_frames", 120),
+                           win_bonus=env_cfg.get("win_bonus", 1.0),
                            render_mode=render_mode)
     if b in ("diambra", "diambra_mock"):
         from .diambra_backend import enable_mock, make_diambra_env
