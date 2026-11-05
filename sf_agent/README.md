@@ -6,30 +6,22 @@ Deep Learning project, KU Leuven 2026–27. Oleksandr Zahdai and Roman Dzhus.
 (predicting "will I be hit in the next k steps?") win more often and learn faster than
 (a) memory-less PPO and (b) a plain LSTM policy, when fighting the built-in CPU?
 
-The agent reads game state from RAM, not pixels. One config line switches the game backend:
-
-| backend | game | needs |
-|---|---|---|
-| `retro` | SF II' Special Champion Edition (Genesis) via stable-retro | your SF2 Genesis ROM. No account or servers. Runs natively on the VSC |
-| `diambra` | SF III 3rd Strike via DIAMBRA Arena | DIAMBRA account, `sfiii3n.zip`, engine containers (Docker on a laptop, Apptainer on the VSC) |
-| `diambra_mock` | DIAMBRA's built-in fake engine | nothing (for tests only) |
-| `dummy` | tiny toy fighting game | nothing (for smoke tests only) |
-
-> SF3 RAM has **no player positions** (only health, side, stun, super, timer), so a RAM-only
-> agent can't see the distance to its opponent. SF2 RAM does have positions (see `sf2_genesis_data.json`).
-> That's why the frame ablation (`env.use_frame=true`) exists.
+The agent reads game state from RAM, not pixels (SF II' Special Champion Edition, Genesis, via
+stable-retro; needs your own ROM, no account or servers). Backends: `retro` (the game) and `dummy`
+(a tiny toy fighting game for smoke tests, no ROM). SF3 / DIAMBRA support was removed to keep the repo
+small (SF3 RAM has no player positions); it is in the git history before the "Minimal" commit.
 
 ## Layout
 
 ```
 train.py  eval.py  demo.py  bench_fps.py
-configs/   base.yaml (all defaults, commented), ppo_mlp, lstm, lstm_aux, lstm_frame, smoke
-sf/envs/   retro_backend.py, diambra_backend.py, dummy_backend.py, common.py, __init__.py (factory)
+configs/   base.yaml (all defaults, commented), ppo_mlp, ppo_cnn, lstm, lstm_aux, lstm_frame, smoke
+sf/envs/   retro_backend.py, dummy_backend.py, common.py, __init__.py (factory)
 sf/algos/  aux_recurrent_ppo.py   <- RecurrentPPO + PPG-style auxiliary phase (the method)
 sf/        agent.py (build/load/play), callbacks.py (win-rate eval), config.py
-slurm/     bench, train_cpu, seeds (3-seed array), train_gpu, train_diambra
-vsc/       setup_vsc.sh, env.sh, engine.env + start_engines_apptainer.sh (DIAMBRA without Docker)
-tools/     probe_ram.py, make_state.py, plot_runs.py, inspect_diambra_engine.sh
+slurm/     bench, seeds (3-seed array), train_gpu
+vsc/       setup_vsc.sh, env.sh
+tools/     probe_ram.py, make_state.py, plot_runs.py
 tests/     end-to-end smoke tests (no ROM needed)
 ```
 
@@ -57,19 +49,7 @@ python demo.py runs/lstm/seed0                # watch it (q quits)
 `probe_ram.py` walks right, walks left and jumps. `agent_x` must go up, then down, and `agent_y`
 must change during the jump. If they don't, fix the addresses before running experiments.
 
-## 3. SF3 backend (`diambra`) on a laptop
-
-```bash
-pip install diambra                           # CLI; first run asks for your DIAMBRA login
-export DIAMBRAROMSPATH=~/roms                 # contains sfiii3n.zip
-diambra arena check-roms ~/roms/sfiii3n.zip
-diambra run -s=9 python train.py -c configs/lstm.yaml --set env.backend=diambra train.n_envs=8
-diambra run python demo.py runs/lstm/seed0
-```
-
-`-s` must be **n_envs + 1**; the extra engine is the evaluation env.
-
-## 4. VSC (KU Leuven HPC)
+## 3. VSC (KU Leuven HPC)
 
 Development (per Lab 0): start a **VS Code Tunnel** in VSC OnDemand (cluster wice, account
 `lp_deeplearning_gt_2026b`, partition `interactive`), open `$VSC_DATA/sf_agent` in VS Code and use its terminal
@@ -97,12 +77,11 @@ python tools/plot_runs.py runs/ppo_mlp runs/lstm runs/lstm_aux -o figures/win_ra
 - Training is **CPU-bound** (emulator), so use wice `batch` nodes. GPUs only matter for the frame ablation (`slurm/train_gpu.slurm`).
 - 12 h limit: checkpoints are saved every 250k steps. To resume, add `train.resume=runs/.../checkpoints/rl_model_<N>_steps.zip`.
 - Check the credit balance of `lp_deeplearning_gt_2026b` before launching big sweeps.
-- **DIAMBRA on the VSC** (no Docker): run `bash tools/inspect_diambra_engine.sh` on a laptop with Docker (Step 0), fill `vsc/engine.env` from its output, test `source vsc/start_engines_apptainer.sh 2` in an interactive job, then `sbatch slurm/train_diambra.slurm ...`. If the engine can't run under Apptainer (port, licence check or internet on compute nodes), use the `retro` backend on the VSC.
 
-## 5. Demo on the laptop
+## 4. Demo on the laptop
 
 Copy a run folder from the VSC (`scp -r` or OnDemand download). It contains `model.zip`, `config.yaml`
-and `vecnormalize.pkl`. Then run `python demo.py runs/<name>/seed0` (retro), or prefix it with `diambra run` for SF3.
+and `vecnormalize.pkl`. Then run `python demo.py runs/<name>/seed0` (retro).
 The demo builds the environment from the run's own `config.yaml`, so it is identical to training.
 
 ## Experiments
@@ -114,6 +93,9 @@ The demo builds the environment from the run's own `config.yaml`, so it is ident
 | E3 | `lstm_aux`, `aux.coef` ∈ {0, 0.1, 0.5, 1.0} | does threat prediction help? (`coef=0` is the same code path as a control) |
 | E4 | best of E2/E3, `--set env.difficulty=...` or `env.retro.state_path=...` at **eval** | generalisation to stronger / unseen opponents |
 | E5 | `lstm_frame` | RAM only vs RAM + 84×84 frame |
+| E6 | `ppo_cnn` | pixels only (CNN, 4 stacked frames) vs RAM: what does reading RAM buy? |
+
+Several start states (opponents) can be mixed in training: `--set env.retro.state_paths='[states/a.state,states/b.state]'` (one drawn at random per episode).
 
 Metrics (logged automatically):
 - `eval/win_rate` with a 95% Wilson CI;

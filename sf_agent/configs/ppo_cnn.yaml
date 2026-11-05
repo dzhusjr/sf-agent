@@ -1,0 +1,13 @@
+# Pixel-only baseline (idea from Oleksandr's first version): the agent sees ONLY the
+# 84x84 grayscale screen (4 stacked frames), no RAM features, no action history.
+# Compare with ppo_mlp (RAM) to quantify what reading RAM buys us. GPU recommended.
+base: base.yaml
+run_name: ppo_cnn
+algo: ppo
+env:
+  use_state: false
+  use_frame: true
+  action_history: 0
+  frame_stack: 4
+train:
+  device: cuda

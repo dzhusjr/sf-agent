@@ -1,5 +1,5 @@
 #!/bin/bash -l
-# Only for the frame ablation (CNN on 84x84 frames):  sbatch slurm/train_gpu.slurm configs/lstm_frame.yaml 0
+# Only for CNN-on-frames runs:  sbatch slurm/train_gpu.slurm configs/lstm_frame.yaml 0   (or configs/ppo_cnn.yaml)
 #SBATCH --job-name=sf-train-gpu
 #SBATCH --account=lp_deeplearning_gt_2026b
 #SBATCH --clusters=wice

@@ -5,8 +5,6 @@ __pycache__/
 .venv/
 probe_frames/
 figures/
-diambra_engine_info.txt
-diambra_run.log
 *.sif
 roms/
 *.zip

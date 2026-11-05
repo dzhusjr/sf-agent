@@ -1,7 +1,6 @@
 """Laptop demo: watch a trained agent fight the built-in CPU.
 
-  python demo.py runs/lstm_aux/seed0                     # retro backend (no account)
-  diambra run python demo.py runs/lstm_aux/seed0         # diambra backend (1 engine)
+  python demo.py runs/lstm_aux/seed0                     # retro backend
 
 Copy the whole run folder from the VSC (model.zip + config.yaml) to your laptop.
 Same code, same config -> same environment as in training. Window: OpenCV, press q to quit.

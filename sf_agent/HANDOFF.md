@@ -12,7 +12,7 @@ Done and verified by Roman on a Mac (SF2 `retro` backend, real game):
 - Difficulty calibrated. Stock state was too easy (random agent wins). Two start states are committed in `states/`:
   - `medium_guile.state` is the default (`configs/base.yaml`). 200k-step LSTM test: round_win_rate ~0.3, eval win_rate 0.35 (CI 0.18-0.57).
   - `hard_guile.state`: round_win_rate = 0 for 200k steps. Only for E4 (generalisation).
-- DIAMBRA (SF3) is parked: registration was down and there is no Apptainer path. Ignore it unless it starts working; `retro` is the main backend.
+- DIAMBRA (SF3) support was removed to keep the repo minimal (their servers were down, and SF3 RAM has no positions). It is in git history.
 
 NOT done (your part):
 1. Windows setup (WSL2), see below.
@@ -95,7 +95,13 @@ Copy `runs/` to a laptop with `scp -r` or OnDemand download to view TensorBoard 
   To make more states: `python tools/make_state.py states/<name>.state` (keys: wasd move, u/i/o punches, j/k/l kicks,
   e/Enter start, p save, q quit). Set LEVEL in OPTIONS first, pick an opponent, press p at "ROUND 1".
   Commit the new `.state` (they are small).
-- **E5 frame ablation:** `sbatch slurm/train_gpu.slurm configs/lstm_frame.yaml` (RAM + 84x84 frame).
+- **E5 frame ablation:** `sbatch slurm/train_gpu.slurm configs/lstm_frame.yaml 0` (RAM + 84x84 frame; the last arg is the seed, run seeds 0-2).
+- **E6 pixel-only baseline (your idea, Oleksandr):** `sbatch slurm/train_gpu.slurm configs/ppo_cnn.yaml 0`. PPO + CNN on 4 stacked 84x84 frames, no RAM features
+  (`env.use_state=false`). Compare with `ppo_mlp` to show what reading RAM buys. It needs a GPU and more steps than the RAM agents.
+- **Multi-opponent training (your 12-character idea):** put the `.state` files you already have (one per character/opponent) in `states/` and train with
+  `--set env.retro.state_paths='[states/ryu.state,states/honda.state,...]'`. One state is drawn at random per episode; `info["state_name"]` tells which.
+  For evaluation on one opponent use `--set env.retro.state_paths='[states/ken.state]'`. Train on some opponents and evaluate on held-out ones for E4.
+  First check that the state files load: `python train.py -c configs/lstm.yaml --set env.retro.state_paths='[states/a.state,states/b.state]' train.n_envs=2 train.total_timesteps=4096`.
 - **Demo on a laptop:** copy a run folder, then `python demo.py runs/<name>/seed0` (q quits). Needs the ROM imported locally.
 
 ## Known issues and watch-outs

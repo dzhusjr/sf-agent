@@ -1,7 +1,7 @@
 #!/bin/bash -l
 # One-time setup on the VSC login node (run from the repo root):
 #   bash vsc/setup_vsc.sh /path/to/folder/with/roms
-# The ROM folder must contain the SF2 Genesis ROM (and/or sfiii3n.zip for DIAMBRA).
+# The ROM folder must contain the SF2 Genesis ROM.
 set -euo pipefail
 ROMS=${1:-$VSC_DATA/roms}
 module purge

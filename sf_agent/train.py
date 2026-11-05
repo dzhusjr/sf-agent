@@ -2,8 +2,6 @@
 
   python train.py -c configs/smoke.yaml                          # 1-min toy test, no ROM
   python train.py -c configs/lstm_aux.yaml --seed 1              # real run (retro backend)
-  diambra run -s=17 python train.py -c configs/lstm.yaml --set env.backend=diambra train.n_envs=16
-      (DIAMBRA needs n_envs + 1 engines: the extra one is the evaluation env)
 
 Outputs in runs/<run_name>/seed<seed>/:
   model.zip, vecnormalize.pkl, best_model.zip, config.yaml, progress.csv, tb/, checkpoints/

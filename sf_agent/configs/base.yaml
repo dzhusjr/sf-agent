@@ -4,22 +4,20 @@ seed: 0
 out_dir: runs            # runs/<run_name>/seed<seed>/{model.zip, checkpoints, tb, progress.csv}
 
 env:
-  backend: retro         # retro (SF2, no account) | diambra (SF3, needs account+engine) | diambra_mock | dummy
-  difficulty: 3          # diambra/dummy; for retro difficulty comes from the save state
+  backend: retro         # retro (SF2, needs your ROM) | dummy (toy game for tests)
+  difficulty: 3          # dummy only; for retro the difficulty is stored in the .state file
+  use_state: true        # false -> drop the RAM vector: pixels only (needs use_frame=true), see configs/ppo_cnn.yaml
   use_frame: false       # true -> add 84x84 grayscale frame (+CNN). Ablation: RAM-only vs RAM+frame
   frame_stack: 1         # >1 stacks observations (gives the MLP baseline short-term memory)
   action_history: 8      # one-hot of the agent's last N actions added to the observation
   win_bonus: 1.0         # +/- reward for winning/losing a round, on top of damage dealt - taken
   retro:
     state_path: states/medium_guile.state
+    state_paths: null    # list of .state files -> one drawn at random per episode (multi-opponent training); overrides state_path
     frame_skip: 4
     use_macros: true     # add hadouken / shoryuken / tatsumaki macro actions
     episode: match       # round | match (best of 3)
     intro_frames: 120    # skip the 'ROUND 1 / FIGHT' intro (no control for ~115 frames, measured)
-  diambra:
-    characters: Ryu
-    step_ratio: 6
-    role: null           # null = random side each episode (P1/P2)
 
 algo: ppo                # ppo | recurrent_ppo | aux_recurrent_ppo
 

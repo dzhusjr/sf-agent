@@ -26,7 +26,7 @@ def run(args, tmp):
     ("recurrent_ppo", []),
     ("aux_recurrent_ppo", []),
     ("recurrent_ppo", ["env.use_frame=true"]),
-    ("aux_recurrent_ppo", ["env.backend=diambra_mock"]),
+    ("ppo", ["env.use_frame=true", "env.use_state=false", "env.action_history=0", "env.frame_stack=4"]),
 ])
 def test_train(tmp_path, algo, extra):
     run([f"algo={algo}", f"run_name={algo}", *extra], str(tmp_path))

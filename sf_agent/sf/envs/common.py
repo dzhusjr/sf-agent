@@ -1,6 +1,6 @@
 """Backend-independent pieces shared by every fighting-game environment.
 
-Every backend (retro / diambra / dummy) returns observations as a Dict with
+Every backend (retro / dummy) returns observations as a Dict with
   "state":  float32 vector of game-state features (RAM), roughly in [-1, 1]
   "frame":  optional uint8 (H, W, 1) grayscale image (only if cfg.env.use_frame)
 and fills `info` with the same keys, so training / eval code never needs to
@@ -64,6 +64,20 @@ class ActionHistory(gym.Wrapper):
         obs = dict(obs)
         obs["actions"] = self._encode()
         return obs, r, term, trunc, info
+
+
+class DropKeys(gym.ObservationWrapper):
+    """Removes keys from a Dict observation. Used for the pixel-only baseline
+    (env.use_state=false drops the RAM vector so the agent sees just the frame)."""
+
+    def __init__(self, env: gym.Env, keys):
+        super().__init__(env)
+        self.keys = set(keys)
+        self.observation_space = gym.spaces.Dict(
+            {k: v for k, v in env.observation_space.spaces.items() if k not in self.keys})
+
+    def observation(self, obs):
+        return {k: v for k, v in obs.items() if k not in self.keys}
 
 
 class RoundStats(gym.Wrapper):

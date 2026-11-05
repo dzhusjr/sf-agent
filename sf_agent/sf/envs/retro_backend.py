@@ -60,7 +60,8 @@ class SF2RetroEnv(gym.Env):
                  use_frame: bool = False, use_macros: bool = True,
                  episode: str = "match", max_round_steps: int = 1500,
                  intro_frames: int = 120,
-                 win_bonus: float = 1.0, render_mode: str | None = None):
+                 win_bonus: float = 1.0, render_mode: str | None = None,
+                 state_paths: list[str] | None = None, seed: int | None = None):
         import stable_retro  # imported lazily so other backends work without it
 
         self.frame_skip = frame_skip
@@ -79,9 +80,16 @@ class SF2RetroEnv(gym.Env):
             obs_type=stable_retro.Observations.IMAGE,
             render_mode="rgb_array",
         )
-        if state_path:  # custom save state (other opponent / difficulty), see tools/make_state.py
-            with gzip.open(state_path, "rb") as fh:
-                self.env.initial_state = fh.read()
+        # Custom save states (other opponent / character / difficulty), see tools/make_state.py.
+        # `state_paths` (a list) wins over `state_path`; with several states one is drawn at
+        # random on every reset, so a single policy trains on a mix of opponents.
+        paths = list(state_paths) if state_paths else ([state_path] if state_path else [])
+        self._states = []
+        for sp in paths:
+            with gzip.open(sp, "rb") as fh:
+                self._states.append((os.path.splitext(os.path.basename(sp))[0], fh.read()))
+        self._rng = np.random.default_rng(seed)
+        self.state_name = None
         self.buttons = list(self.env.buttons)
 
         self.actions = [("basic", a) for a in BASIC]
@@ -155,6 +163,8 @@ class SF2RetroEnv(gym.Env):
 
     # ------------------------------------------------------------------ gym API
     def reset(self, *, seed=None, options=None):
+        if self._states:
+            self.state_name, self.env.initial_state = self._states[int(self._rng.integers(len(self._states)))]
         img, self.info = self.env.reset(seed=seed)
         self.info = dict(self.info) if self.info else {}
         noop = np.zeros(len(self.buttons), np.int8)
@@ -165,7 +175,7 @@ class SF2RetroEnv(gym.Env):
         self._last_img = img
         own, opp = self._hp(self.info)
         return self._obs(img), {"own_hp": own, "opp_hp": opp, "hp_lost": False,
-                                "round_done": False, "round_won": None}
+                                "round_done": False, "round_won": None, "state_name": self.state_name}
 
     def step(self, action):
         prev_own, prev_opp = self._hp(self.info)

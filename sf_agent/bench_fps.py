@@ -3,7 +3,6 @@ parallel envs, with random actions. Run this FIRST on a VSC node: it decides how
 many timesteps you can afford per experiment.
 
   python bench_fps.py --backend retro --n 1 8 16 32 --seconds 30
-  diambra run -s=32 python bench_fps.py --backend diambra --n 1 8 32
 """
 from __future__ import annotations
 
