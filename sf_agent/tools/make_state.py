@@ -36,7 +36,7 @@ KEYMAP = {ord("w"): "UP", ord("s"): "DOWN", ord("a"): "LEFT", ord("d"): "RIGHT",
           0: "UP", 1: "DOWN", 2: "LEFT", 3: "RIGHT",   # macOS arrow codes
           13: "START", 10: "START", ord("e"): "START", ord("m"): "MODE"}
 # ids 0-7 and 10 are verified; 8, 9, 11 are Vega/Sagat/Bison in an unknown order -> rename those by the screenshot
-CHARS = ["ryu", "honda", "blanka", "guile", "ken", "chunli", "zangief", "dhalsim", "boss8", "boss9", "balrog", "boss11"]
+CHARS = ["ryu", "honda", "blanka", "guile", "ken", "chunli", "zangief", "dhalsim", "bison", "sagat", "balrog", "vega"]
 held, hold, info = None, 0, {}
 img = env.render()
 while True:

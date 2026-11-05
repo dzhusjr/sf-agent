@@ -13,7 +13,16 @@ env:
   win_bonus: 1.0         # +/- reward for winning/losing a round, on top of damage dealt - taken
   retro:
     state_path: states/medium_guile.state
-    state_paths: null    # list of .state files -> one drawn at random per episode (multi-opponent training); overrides state_path
+    state_paths:         # list of .state files -> one drawn at random per episode (multi-opponent training); overrides state_path
+      - states/ryu_vs_ryu.state      # TRAIN opponents (9). Held out for E4: blanka, dhalsim, balrog.
+      - states/ryu_vs_honda.state    # To train on one opponent only: --set env.retro.state_paths=null
+      - states/ryu_vs_chunli.state
+      - states/ryu_vs_zangief.state
+      - states/ryu_vs_guile.state
+      - states/ryu_vs_ken.state
+      - states/ryu_vs_vega.state
+      - states/ryu_vs_sagat.state
+      - states/ryu_vs_bison.state
     frame_skip: 4
     use_macros: true     # add hadouken / shoryuken / tatsumaki macro actions
     episode: match       # round | match (best of 3)

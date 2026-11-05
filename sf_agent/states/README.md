@@ -3,7 +3,7 @@
 Saved emulator snapshots, recorded with `python tools/make_state.py states/<name>.state`
 (small, contain no ROM data, so they ARE committed).
 
-- `medium_guile.state`: Ryu vs Guile, mid CPU level. **Default for all experiments** (`configs/base.yaml`).
+- `medium_guile.state`: Ryu vs Guile, mid CPU level. Fallback / single-opponent debugging (`--set env.retro.state_paths=null` uses it).
   A 200k-step LSTM test run gave round_win_rate ~0.3 and eval win_rate 0.35: not saturated, not hopeless.
 - `hard_guile.state`: same, LEVEL at maximum. A 200k-step run had round_win_rate = 0 throughout.
   Use only for the generalisation experiment E4 (evaluate a model trained on medium against it).
@@ -23,8 +23,6 @@ Train on 9 opponents, test on 3 unseen ones (different play styles: rushdown, zo
 - train: ryu, honda, chunli, zangief, guile, ken, vega, sagat, bison
 - held-out: blanka, dhalsim, balrog
 
-```
---set 'env.retro.state_paths=[states/ryu_vs_ryu.state,states/ryu_vs_honda.state,states/ryu_vs_chunli.state,states/ryu_vs_zangief.state,states/ryu_vs_guile.state,states/ryu_vs_ken.state,states/ryu_vs_vega.state,states/ryu_vs_sagat.state,states/ryu_vs_bison.state]'
-```
+The train list is already the default in `configs/base.yaml` (`env.retro.state_paths`), so E1-E3 need no extra flags.
 
 Evaluate one held-out opponent with `--set 'env.retro.state_paths=[states/ryu_vs_blanka.state]'` (same for dhalsim, balrog).

@@ -91,11 +91,11 @@ The demo builds the environment from the run's own `config.yaml`, so it is ident
 | E1 | `ppo_mlp` | baseline: no memory (4 stacked observations + last 8 actions) |
 | E2 | `lstm` | does memory help? |
 | E3 | `lstm_aux`, `aux.coef` ∈ {0, 0.1, 0.5, 1.0} | does threat prediction help? (`coef=0` is the same code path as a control) |
-| E4 | best of E2/E3, `--set env.difficulty=...` or `env.retro.state_path=...` at **eval** | generalisation to stronger / unseen opponents |
+| E4 | best of E2/E3, `--set env.difficulty=...` or `env.retro.state_paths=[...]` at **eval** (held out: blanka, dhalsim, balrog) | generalisation to stronger / unseen opponents |
 | E5 | `lstm_frame` | RAM only vs RAM + 84×84 frame |
 | E6 | `ppo_cnn` | pixels only (CNN, 4 stacked frames) vs RAM: what does reading RAM buy? |
 
-Several start states (opponents) can be mixed in training: `--set env.retro.state_paths='[states/a.state,states/b.state]'` (one drawn at random per episode).
+Training mixes 9 opponents by default (`env.retro.state_paths` in `configs/base.yaml`, one drawn at random per episode); see `states/README.md` for the train / held-out split.
 
 Metrics (logged automatically):
 - `eval/win_rate` with a 95% Wilson CI;

@@ -2,7 +2,7 @@
 
   python eval.py runs/lstm_aux/seed0 --rounds 100
   python eval.py runs/lstm_aux/seed0 --rounds 100 --set env.difficulty=6      # generalisation test
-  python eval.py runs/lstm_aux/seed0 --set env.retro.state_path=states/vs_ken.state
+  python eval.py runs/lstm_aux/seed0 --set 'env.retro.state_paths=[states/ryu_vs_blanka.state]'   # held-out opponent
 
 Reads the run's own config.yaml so the environment is identical to training.
 Writes <run>/eval_<tag>.json.
