@@ -9,3 +9,22 @@ Saved emulator snapshots, recorded with `python tools/make_state.py states/<name
   Use only for the generalisation experiment E4 (evaluate a model trained on medium against it).
 
 The stock `Challenger` state shipped with stable-retro is too easy (a random agent wins).
+
+- `ryu_vs_<opponent>.state` (12 files): Ryu vs every CPU opponent in ladder order, recorded by us with `tools/make_state.py`
+  (key `x` KOs the opponent to climb the ladder). Saved at "ROUND 1", so the default `intro_frames=120` is right. Difficulty LEVEL as in `medium_guile`.
+  Opponents: ryu (mirror), honda, chunli, zangief, blanka, dhalsim, guile, ken, balrog, vega, sagat, bison.
+- `ken_vs_honda.state`: from Oleksandr's set (player = Ken). Saved after "FIGHT!", needs `--set env.retro.intro_frames=1`.
+  His other states are other player characters and stay in `STATES/`.
+
+## Train / held-out split for E4
+
+Train on 9 opponents, test on 3 unseen ones (different play styles: rushdown, zoner, boxer):
+
+- train: ryu, honda, chunli, zangief, guile, ken, vega, sagat, bison
+- held-out: blanka, dhalsim, balrog
+
+```
+--set 'env.retro.state_paths=[states/ryu_vs_ryu.state,states/ryu_vs_honda.state,states/ryu_vs_chunli.state,states/ryu_vs_zangief.state,states/ryu_vs_guile.state,states/ryu_vs_ken.state,states/ryu_vs_vega.state,states/ryu_vs_sagat.state,states/ryu_vs_bison.state]'
+```
+
+Evaluate one held-out opponent with `--set 'env.retro.state_paths=[states/ryu_vs_blanka.state]'` (same for dhalsim, balrog).
