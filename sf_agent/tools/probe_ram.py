@@ -4,6 +4,8 @@ Plays a scripted sequence (walk right, walk left, jump, crouch) and prints the
 variables every few frames. Expected: agent_x grows while walking right, shrinks
 walking left; agent_y changes during the jump; health values match the bars.
 Saves a few frames to probe_frames/ so you can eyeball positions.
+Uses the stock stable-retro state (Ryu vs Guile), which starts with the "ROUND 1 / FIGHT" intro:
+inputs are ignored for ~115 frames, hence the 120 idle frames first.
 
   python tools/probe_ram.py
 """
@@ -32,7 +34,7 @@ def press(*names):
     return m
 
 
-script = [("idle", press(), 60), ("right", press("RIGHT"), 60), ("left", press("LEFT"), 60),
+script = [("idle", press(), 120), ("right", press("RIGHT"), 60), ("left", press("LEFT"), 60),
           ("jump", press("UP"), 40), ("crouch", press("DOWN"), 30), ("punch", press("Z"), 30)]
 keys = ["health", "enemy_health", "agent_x", "agent_y", "agent_status",
         "enemy_x", "enemy_y", "enemy_status", "enemy_character"]
