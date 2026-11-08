@@ -1,0 +1,61 @@
+run_name: lstm
+seed: 0
+out_dir: runs
+env:
+  backend: retro
+  difficulty: 3
+  use_state: true
+  use_frame: false
+  frame_stack: 1
+  action_history: 8
+  win_bonus: 1.0
+  retro:
+    state_path: states/medium_guile.state
+    state_paths:
+    - states/ryu_vs_ryu.state
+    - states/ryu_vs_honda.state
+    - states/ryu_vs_chunli.state
+    - states/ryu_vs_zangief.state
+    - states/ryu_vs_guile.state
+    - states/ryu_vs_ken.state
+    - states/ryu_vs_vega.state
+    - states/ryu_vs_sagat.state
+    - states/ryu_vs_bison.state
+    frame_skip: 4
+    use_macros: true
+    episode: match
+    intro_frames: 120
+algo: recurrent_ppo
+train:
+  n_envs: 32
+  total_timesteps: 5000000
+  n_steps: 256
+  batch_size: 1024
+  n_epochs: 4
+  learning_rate: 0.00025
+  gamma: 0.94
+  gae_lambda: 0.95
+  clip_range: 0.15
+  ent_coef: 0.01
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  net_arch:
+  - 256
+  - 256
+  lstm_hidden: 256
+  normalize_reward: true
+  device: cpu
+  checkpoint_every: 250000
+  resume: null
+aux:
+  k: 8
+  coef: 1.0
+  epochs: 2
+  seq_len: 32
+  batch_seqs: 64
+  lr: 0.0003
+  clone_coef: 1.0
+eval:
+  every: 100000
+  rounds: 20
+  deterministic: false
