@@ -73,6 +73,7 @@ def main():
     ax.set_xlabel("environment steps (millions)")
     ax.set_ylabel(args.metric)
     ax.set_xlim(0, limit / 1e6)
+    ax.set_ylim(bottom=0)
     ax.grid(alpha=0.3)
     ax.legend(frameon=False, loc="lower right")
     ax.set_title(args.title or f"{args.metric}: mean over seeds, 95% interval, smoothed ({args.smooth} pts)", fontsize=10)
