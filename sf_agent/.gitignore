@@ -3,9 +3,11 @@ __pycache__/
 *.pyc
 .venv/
 probe_frames/
-figures/
 *.sif
 *.zip
 *.smd
 *.gen
 *.bin
+runs_vsc/
+*.tar.gz
+.sf_patch.zip.done

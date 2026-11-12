@@ -72,6 +72,7 @@ def main():
     if cur.get("enabled"):
         n_states = len(env_cfg["retro"]["state_paths"])
         callbacks.callbacks.append(Curriculum(n_states, cur["start"], cur["threshold"], cur["window"]))
+        venv.env_method("set_active", cur["start"])   # before learn(): its first reset already uses the start pool
     try:
         model.learn(total_timesteps=t["total_timesteps"], callback=callbacks,
                     reset_num_timesteps=not bool(resume))

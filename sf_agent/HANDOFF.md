@@ -1,4 +1,4 @@
-# HANDOFF (Roman -> Oleksandr), 5 Nov 2026
+# HANDOFF (Roman -> Oleksandr), updated 12 Nov 2026
 
 Goal: train the agents on the VSC, produce win-rate curves for the milestone (**upload 13/11**, feedback 18/11),
 poster 15/12, report 04/01/2027. Background and method: `README.md`.
@@ -9,22 +9,39 @@ Done and verified by Roman on a Mac (SF2 `retro` backend, real game):
 - Full pipeline works: train, eval, demo, resume, 7 smoke tests.
 - RAM addresses (x/y/status) verified with `tools/probe_ram.py`.
 - Round-intro skip (`retro.intro_frames: 120`) fixed: input is ignored for ~115 frames after reset.
-- Difficulty calibrated. Stock state was too easy (random agent wins). Start states are committed in `states/` (details: `states/README.md`):
-  - **12 states `ryu_vs_<opponent>.state`**: Ryu vs every CPU opponent (ryu, honda, chunli, zangief, blanka, dhalsim, guile, ken, balrog, vega, sagat, bison),
-    same difficulty LEVEL as `medium_guile`. Opponent IDs were verified from RAM (`enemy_character`), file names match contents.
-  - **Default training set = 9 opponents** (`env.retro.state_paths` in `configs/base.yaml`); one is drawn at random per episode.
-    **Held out for E4 (never trained on): blanka, dhalsim, balrog** (rushdown, zoner, boxer).
-  - `medium_guile.state` (single opponent, 200k-step LSTM test: round_win_rate ~0.3) is the fallback: `--set env.retro.state_paths=null`.
-  - `hard_guile.state`: round_win_rate = 0 for 200k steps. Extra E4 test.
-- Multi-opponent smoke run (LSTM, 100k steps, 9 opponents, Mac CPU, 8 envs): works; eval win_rate 0.30 (CI 0.15-0.52), round_win_rate still ~0 early in training.
-  Training on 9 opponents is harder than on one, expect slower learning; check curves on the VSC before committing to 5M steps.
-  If after ~1M steps nothing is learned, fall back to `state_paths=null` (Guile only) and report multi-opponent as a later experiment.
+- Difficulty calibrated. Stock state was too easy (random agent wins). Two start states are committed in `states/`:
+  - `medium_guile.state` is the default (`configs/base.yaml`). 200k-step LSTM test: round_win_rate ~0.3, eval win_rate 0.35 (CI 0.18-0.57).
+  - `hard_guile.state`: round_win_rate = 0 for 200k steps. Only for E4 (generalisation).
 - DIAMBRA (SF3) support was removed to keep the repo minimal (their servers were down, and SF3 RAM has no positions). It is in git history.
 
 NOT done (your part):
 1. Windows setup (WSL2), see below.
 2. VSC setup and all real training runs. **Nothing has been trained on the VSC yet.**
 3. Baselines E1-E3, seeds, plots, milestone text.
+
+## UPDATE 12 Nov: what the first runs showed and what to do next
+
+First VSC runs (5M steps, 9 training opponents): RAM agents (PPO-MLP, LSTM) reach round win rate ~0.45-0.5, the pixel-only CNN ~0.3, RAM+frame LSTM no better than RAM-only.
+**The runs are NOT comparable yet:** `ppo_mlp` seeds 0-2 and `lstm` used gamma 0.97 / ent_coef 0.01 / 16 envs, `lstm_aux` still used gamma 0.94 / 32 envs, `lstm_frame`, `ppo_cnn` and
+`ppo_mlp` seed 3 used gamma 0.99 / ent_coef 0.02. So "MLP > LSTM > aux" may be a hyper-parameter effect. Do not change `configs/base.yaml` per experiment; pass `--set` and a descriptive `run_name`.
+
+New in the code (all off by default, so old runs stay reproducible):
+- `train.lr_schedule=linear`: learning rate decays linearly to 0 (default `constant`).
+- Per-opponent training win rate is logged as `opp/<state_name>` (rolling over the last 100 rounds) in `progress.csv`. Look at it before blaming the algorithm: a plateau at ~0.4 may be "easy opponents won, hard ones lost".
+- Opponent curriculum: `curriculum.enabled=true curriculum.start=1 curriculum.threshold=0.5 curriculum.window=100`. Starts with the first state of `env.retro.state_paths` (ladder order) and adds the next one when the rolling win rate reaches the threshold; old opponents stay in the pool. Logged as `curriculum/active`.
+- `tools/eval_all.py`: evaluates every `model.zip` on the training mix, held-out blanka / dhalsim / balrog and hard_guile (E4), in parallel, writes `eval_summary.csv`.
+- `tools/plot_compare.py`: curves cut to a common budget, smoothed, 95% interval.
+
+### Controlled rerun (priority 1, same settings for every agent, 3 seeds)
+```bash
+for cfg in ppo_mlp lstm lstm_aux; do
+  sbatch slurm/seeds.slurm configs/$cfg.yaml train.gamma=0.97 train.ent_coef=0.01 train.n_envs=16 train.lr_schedule=linear run_name=${cfg}_v2
+done
+```
+Check in `slurm/seeds.slurm` that the extra `--set` arguments really override its own `n_envs`. Then, as a separate experiment on the best algorithm:
+`... curriculum.enabled=true run_name=<cfg>_curr` (E7). Afterwards: `python tools/eval_all.py --runs runs --rounds 100 --workers 6` and `python tools/plot_compare.py runs -o figures/win_rate.png`.
+
+Known gap: the aux head's AUC is not logged; accuracy alone is meaningless (86% of steps are "no hit"). In the first runs its BCE was 9-13% below a constant predictor, i.e. it learns a weak signal.
 
 ## 0. Your machine (Windows): use WSL2
 
@@ -97,23 +114,18 @@ Copy `runs/` to a laptop with `scp -r` or OnDemand download to view TensorBoard 
 
 ## 5. Later experiments
 
-- **E4 generalisation:** evaluate the best model on opponents it never saw (`blanka`, `dhalsim`, `balrog`) and on `hard_guile`.
-  Use 100 rounds and compare with the same model on the training opponents:
-  ```bash
-  for o in blanka dhalsim balrog; do
-    python eval.py runs/<best>/seed0 --rounds 100 --set "env.retro.state_paths=[states/ryu_vs_$o.state]"
-  done
-  python eval.py runs/<best>/seed0 --rounds 100 --set "env.retro.state_paths=[states/hard_guile.state]"
-  ```
-  Compare E1/E2/E3 on these: does memory or the threat head generalise better to unseen opponents?
-  Make more states: `python tools/make_state.py states/<name>.state` (keys: wasd move, u/i/o punches, j/k/l kicks,
-  e/Enter start, x KO the opponent, p save, q quit). If the argument does not end in `.state` (e.g. `states/ryu_vs_`) the opponent name is read from RAM and appended.
-  Set LEVEL in OPTIONS first, press p at "ROUND 1". Commit the new `.state` (they are small).
+- **E4 generalisation:** evaluate the best model on `states/hard_guile.state` or other opponents:
+  `python eval.py runs/<best>/seed0 --set env.retro.state_path=states/hard_guile.state`.
+  To make more states: `python tools/make_state.py states/<name>.state` (keys: wasd move, u/i/o punches, j/k/l kicks,
+  e/Enter start, p save, q quit). Set LEVEL in OPTIONS first, pick an opponent, press p at "ROUND 1".
+  Commit the new `.state` (they are small).
 - **E5 frame ablation:** `sbatch slurm/train_gpu.slurm configs/lstm_frame.yaml 0` (RAM + 84x84 frame; the last arg is the seed, run seeds 0-2).
 - **E6 pixel-only baseline (your idea, Oleksandr):** `sbatch slurm/train_gpu.slurm configs/ppo_cnn.yaml 0`. PPO + CNN on 4 stacked 84x84 frames, no RAM features
   (`env.use_state=false`). Compare with `ppo_mlp` to show what reading RAM buys. It needs a GPU and more steps than the RAM agents.
-- **Multi-opponent check** (before a long job): `python train.py -c configs/lstm.yaml --set train.n_envs=2 train.total_timesteps=4096`
-  (loads all 9 train states; `info["state_name"]` tells which one an episode used).
+- **Multi-opponent training (your 12-character idea):** put the `.state` files you already have (one per character/opponent) in `states/` and train with
+  `--set env.retro.state_paths='[states/ryu.state,states/honda.state,...]'`. One state is drawn at random per episode; `info["state_name"]` tells which.
+  For evaluation on one opponent use `--set env.retro.state_paths='[states/ken.state]'`. Train on some opponents and evaluate on held-out ones for E4.
+  First check that the state files load: `python train.py -c configs/lstm.yaml --set env.retro.state_paths='[states/a.state,states/b.state]' train.n_envs=2 train.total_timesteps=4096`.
 - **Demo on a laptop:** copy a run folder, then `python demo.py runs/<name>/seed0` (q quits). Needs the ROM imported locally.
 
 ## Known issues and watch-outs
@@ -122,5 +134,4 @@ Copy `runs/` to a laptop with `scp -r` or OnDemand download to view TensorBoard 
 - Look at `eval/top_action_share` and `eval/action_entropy`: a high top share means the agent spams one move.
 - The RAM state has no wall-position feature; the agent can't see how close it is to the corner. Optional improvement.
 - Git identity: set `git config --global user.name/email` before committing.
-- `ryu_vs_bison.state` starts with the player at 128/176 HP (all others 176/176). Minor, only affects the first round; re-record with `tools/make_state.py` if it bothers you.
 - Don't commit `runs/`, `logs/` or any ROM. `states/*.state` are committed on purpose.
