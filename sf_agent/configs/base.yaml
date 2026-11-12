@@ -37,6 +37,7 @@ train:
   batch_size: 1024
   n_epochs: 4
   learning_rate: 2.5e-4
+  lr_schedule: constant   # constant | linear (decays to 0 over total_timesteps)
   gamma: 0.94
   gae_lambda: 0.95
   clip_range: 0.15
@@ -49,6 +50,12 @@ train:
   device: auto           # cpu is usually faster for small MLP/LSTM policies
   checkpoint_every: 250000
   resume: null           # path to a checkpoint .zip to continue training
+
+curriculum:              # multi-opponent only: start with the first `start` states of env.retro.state_paths (ladder order)
+  enabled: false         # and add the next when the rolling win rate over `window` rounds reaches `threshold`
+  start: 1
+  threshold: 0.5
+  window: 100
 
 aux:                     # only used by aux_recurrent_ppo
   k: 8                   # label: "will I be hit within the next k agent steps?"

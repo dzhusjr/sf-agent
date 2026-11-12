@@ -19,7 +19,7 @@ from stable_baselines3.common.logger import configure
 from stable_baselines3.common.vec_env import VecNormalize
 
 from sf.agent import ALGOS, build_model, is_recurrent
-from sf.callbacks import RoundStatsLogger, WinRateEval
+from sf.callbacks import Curriculum, RoundStatsLogger, WinRateEval
 from sf.config import load_config
 from sf.envs import make_vec_env
 
@@ -68,6 +68,10 @@ def main():
                     deterministic=cfg["eval"].get("deterministic", False)),
         RoundStatsLogger(),
     ])
+    cur = cfg.get("curriculum") or {}
+    if cur.get("enabled"):
+        n_states = len(env_cfg["retro"]["state_paths"])
+        callbacks.callbacks.append(Curriculum(n_states, cur["start"], cur["threshold"], cur["window"]))
     try:
         model.learn(total_timesteps=t["total_timesteps"], callback=callbacks,
                     reset_num_timesteps=not bool(resume))

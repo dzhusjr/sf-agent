@@ -89,6 +89,7 @@ class SF2RetroEnv(gym.Env):
             with gzip.open(sp, "rb") as fh:
                 self._states.append((os.path.splitext(os.path.basename(sp))[0], fh.read()))
         self._rng = np.random.default_rng(seed)
+        self._active = len(self._states)      # curriculum: only the first `_active` states are drawn
         self.state_name = None
         self.buttons = list(self.env.buttons)
 
@@ -161,10 +162,14 @@ class SF2RetroEnv(gym.Env):
                 break
         return img
 
+    def set_active(self, k: int):
+        """Curriculum hook: draw start states only from the first k of `state_paths`."""
+        self._active = int(min(max(k, 1), len(self._states)))
+
     # ------------------------------------------------------------------ gym API
     def reset(self, *, seed=None, options=None):
         if self._states:
-            self.state_name, self.env.initial_state = self._states[int(self._rng.integers(len(self._states)))]
+            self.state_name, self.env.initial_state = self._states[int(self._rng.integers(self._active))]
         img, self.info = self.env.reset(seed=seed)
         self.info = dict(self.info) if self.info else {}
         noop = np.zeros(len(self.buttons), np.int8)
@@ -199,7 +204,7 @@ class SF2RetroEnv(gym.Env):
         own, opp = self._hp(self.info)
         reward = damage_reward(prev_own, own, prev_opp, opp)
         info = {"own_hp": own, "opp_hp": opp, "hp_lost": own < prev_own - 1e-6,
-                "round_done": False, "round_won": None}
+                "round_done": False, "round_won": None, "state_name": self.state_name}
 
         if not round_done and self.t >= self.max_round_steps:   # safety net
             round_done, won = True, opp < own

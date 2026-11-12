@@ -13,6 +13,16 @@ from .algos.aux_recurrent_ppo import AuxRecurrentPPO
 ALGOS = {"ppo": PPO, "recurrent_ppo": RecurrentPPO, "aux_recurrent_ppo": AuxRecurrentPPO}
 
 
+class LinearSchedule:
+    """learning_rate(progress_remaining) = start * progress_remaining (1 -> 0 over training)."""
+
+    def __init__(self, start: float):
+        self.start = start
+
+    def __call__(self, progress_remaining: float) -> float:
+        return self.start * progress_remaining
+
+
 def is_recurrent(algo: str) -> bool:
     return algo in ("recurrent_ppo", "aux_recurrent_ppo")
 
@@ -21,7 +31,8 @@ def build_model(cfg: dict, venv, tb_dir: str | None):
     algo, t = cfg["algo"], cfg["train"]
     common = dict(
         n_steps=t["n_steps"], batch_size=t["batch_size"], n_epochs=t["n_epochs"],
-        learning_rate=t["learning_rate"], gamma=t["gamma"], gae_lambda=t["gae_lambda"],
+        learning_rate=LinearSchedule(t["learning_rate"]) if t.get("lr_schedule") == "linear" else t["learning_rate"],
+        gamma=t["gamma"], gae_lambda=t["gae_lambda"],
         clip_range=t["clip_range"], ent_coef=t["ent_coef"], vf_coef=t["vf_coef"],
         max_grad_norm=t["max_grad_norm"], seed=cfg["seed"], device=t["device"],
         tensorboard_log=tb_dir, verbose=1,
